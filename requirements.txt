@@ -1,0 +1,4 @@
+moviepy==1.0.3
+numpy==1.25.2
+opencv_python==4.8.0.76
+customtkinter==5.2.0
