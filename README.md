@@ -1,5 +1,6 @@
 # VideoWatermarkRemover
 Removing fixed-position watermarks and subtitles from a video by manually selecting the areas.
+
 通过手动框选区域去除视频中位置固定的水印和字幕.
 
 ## 项目介绍
@@ -9,6 +10,7 @@ GUI for [WatermarkRemover](https://github.com/lxulxu/WatermarkRemover)
 
 ## Download
 Visit the **[GitHub Releases](https://github.com/jinwyp/VideoWatermarkerRemover/releases)** to download the latest version or any previous release.
+
 
 ## How to Use 如何使用
 

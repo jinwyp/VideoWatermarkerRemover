@@ -69,7 +69,7 @@ class WatermarkRemover():
 
     #阈值分割
     _, mask = cv2.threshold(roi_img, threshold, 255, cv2.THRESH_BINARY)
-    print("=== Step 2: finish to generate_single_mask ")
+    print("=== Step 2: finish to generate_single_mask of frame ")
     return mask
   
 
@@ -81,9 +81,11 @@ class WatermarkRemover():
     '''
     video = cv2.VideoCapture(video_path)
     success, frame = video.read()
-    roi = self.select_roi(frame, 'select watermark ROI')
-    mask = numpy.ones((frame.shape[0], frame.shape[1]), numpy.uint8)
-    mask.fill(255)
+    print("=== Please select the region of the watermark. Then press SPACE or ENTER to continue ")
+    print("=== 请选择要去掉的水印的区域 然后按空格或回车继续 \n")
+    roi = self.select_roi(frame, 'Select watermark ROI')
+    generateAllFrameMask = numpy.ones((frame.shape[0], frame.shape[1]), numpy.uint8)
+    generateAllFrameMask.fill(255)
 
     step = video.get(cv2.CAP_PROP_FRAME_COUNT) // 5
     index = 0
@@ -91,13 +93,13 @@ class WatermarkRemover():
 
     while success:
       if index % step == 0:
-        mask = cv2.bitwise_and(mask, self.generate_single_mask(frame, roi, self.threshold))
+        generateAllFrameMask = cv2.bitwise_and(generateAllFrameMask, self.generate_single_mask(frame, roi, self.threshold))
       success, frame = video.read()
       index += 1
     video.release()
     print("=== Step 1: finish to generate_watermark_mask ")
 
-    return self.dilate_mask(mask)
+    return self.dilate_mask(generateAllFrameMask)
 
   def generate_subtitle_mask(self, frame: numpy.ndarray, roi: list) -> numpy.ndarray:
     '''
@@ -144,19 +146,17 @@ class WatermarkRemover():
 
     for singleFile in os.listdir(self.source_path):
         filenames.append(os.path.join(self.source_path, singleFile))
-        print(f"Source path: {self.source_path} , filename: {singleFile}")
-        print(f"Source file full path: {os.path.join(self.source_path, singleFile)} \n" )
+        print(f"Source file path: {self.source_path}, filename: {singleFile},  full path: {os.path.join(self.source_path, singleFile)} \n")
 
     mask = None
 
-    for i, name in enumerate(filenames):
+    for i, singleSourceVideoFileName in enumerate(filenames):
 
-      if i == 0:
-        #生成水印蒙版
-        mask = self.generate_watermark_mask(name)
+      #生成水印蒙版
+      mask = self.generate_watermark_mask(singleSourceVideoFileName)
       
       #创建待写入文件对象
-      video = cv2.VideoCapture(name)
+      video = cv2.VideoCapture(singleSourceVideoFileName)
       fps = video.get(cv2.CAP_PROP_FPS)
       size = (int(video.get(cv2.CAP_PROP_FRAME_WIDTH)), int(video.get(cv2.CAP_PROP_FRAME_HEIGHT)))
       video_writer = cv2.VideoWriter(VIDEO_OUTPUT_TEMP_VIDEO, cv2.VideoWriter_fourcc(*'mp4v'), fps, size)
@@ -175,9 +175,11 @@ class WatermarkRemover():
       video_writer.release()
 
       #封装视频
-      (_, filename) = os.path.split(name)
+      (_, filename) = os.path.split(singleSourceVideoFileName)
       output_path = os.path.join(self.output_path, filename.split('.')[0] + '_no_watermark.mp4')#输出文件路径
-      self.merge_audio(name, output_path, VIDEO_OUTPUT_TEMP_VIDEO)
+      self.merge_audio(singleSourceVideoFileName, output_path, VIDEO_OUTPUT_TEMP_VIDEO)
+
+      print(" \n")
 
     if os.path.exists(VIDEO_OUTPUT_TEMP_VIDEO):
       os.remove(VIDEO_OUTPUT_TEMP_VIDEO)
@@ -236,7 +238,7 @@ if __name__ == '__main__':
   
   args = parser.parse_args()
   print("====================")
-  print(args.subtitle)
+  print(f"APP start! arguments: [subtitle: {args.subtitle} , threshold: {args.threshold}, output: {args.output} ] ")
   print("====================")
 
   if args.output > 0:
